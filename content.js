@@ -2,28 +2,42 @@
 
 (() => {
   /**
-   * Intercepts the Enter key to prevent form submission and insert a newline instead.
+   * Intercepts the Enter key.
+   * - Sends the message on Ctrl+Enter.
+   * - Inserts a newline on Enter (without Shift/Ctrl).
    */
   function handleEnterKey(event) {
-    if (event.key === "Enter" && !event.shiftKey) {
-      // Prevent the default action (form submission) immediately
-      event.preventDefault();
-      event.stopImmediatePropagation();
+    if (event.key === "Enter") {
+      if (event.ctrlKey) {
+        // Ctrl+Enter: Send the message
+        event.preventDefault();
+        event.stopImmediatePropagation();
 
-      const textarea = event.target;
-      const { selectionStart, selectionEnd, value = "" } = textarea; // FIXED: Default value prevents crash
+        const sendButton = document.querySelector('[data-testid="send-button"]');
+        if (sendButton) {
+          sendButton.click();
+        }
+      } else if (!event.shiftKey) {
+        // Enter without Shift/Ctrl: Insert a newline
+        event.preventDefault();
+        event.stopImmediatePropagation();
 
-      // Manually insert a newline character at the cursor position
-      const newValue = value.substring(0, selectionStart) + "\n" + value.substring(selectionEnd);
-      textarea.value = newValue;
+        const textarea = event.target;
+        const { selectionStart, selectionEnd, value = "" } = textarea; // FIXED: Default value prevents crash
 
-      // Move the cursor to after the inserted newline
-      const newCursorPosition = selectionStart + 1;
-      textarea.selectionStart = newCursorPosition;
-      textarea.selectionEnd = newCursorPosition;
+        // Manually insert a newline character at the cursor position
+        const newValue = value.substring(0, selectionStart) + "\n" + value.substring(selectionEnd);
+        textarea.value = newValue;
 
-      // Notify React of the manual change
-      textarea.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+        // Move the cursor to after the inserted newline
+        const newCursorPosition = selectionStart + 1;
+        textarea.selectionStart = newCursorPosition;
+        textarea.selectionEnd = newCursorPosition;
+
+        // Notify React of the manual change
+        textarea.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+      }
+      // Note: Shift+Enter is not handled, allowing its default behavior.
     }
   }
 
