@@ -3,6 +3,7 @@
   "name": "Disable Enter in ChatGPT",
   "version": "1.0",
   "description": "Prevents accidental message sends in ChatGPT by disabling the Enter key. Use Shift+Enter to add new lines.",
+  "author": "Priit Kallas, Amperly AI",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",

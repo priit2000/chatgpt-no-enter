@@ -1,44 +1,69 @@
-// The core function to block the Enter key.
-// It stops the event before it reaches ChatGPT's own handlers.
-function blockEnter(event) {
-  // Target the "Enter" key, but only when "Shift" is not pressed.
-  if (event.key === "Enter" && !event.shiftKey) {
-    event.preventDefault(); // Prevent the default action (submitting the form).
-    event.stopImmediatePropagation(); // Stop any other event listeners on this element from running.
+// --- START OF FILE content.js ---
+
+(() => {
+  /**
+   * Intercepts the Enter key to prevent form submission and insert a newline instead.
+   */
+  function handleEnterKey(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      // Prevent the default action (form submission) immediately
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      const textarea = event.target;
+      const { selectionStart, selectionEnd, value = "" } = textarea; // FIXED: Default value prevents crash
+
+      // Manually insert a newline character at the cursor position
+      const newValue = value.substring(0, selectionStart) + "\n" + value.substring(selectionEnd);
+      textarea.value = newValue;
+
+      // Move the cursor to after the inserted newline
+      const newCursorPosition = selectionStart + 1;
+      textarea.selectionStart = newCursorPosition;
+      textarea.selectionEnd = newCursorPosition;
+
+      // Notify React of the manual change
+      textarea.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+    }
   }
-}
 
-// Finds the ChatGPT textarea and applies the event listener if it hasn't been applied yet.
-function patchTextarea() {
-  // Use the specific ID for the textarea to be more robust.
-  const textarea = document.querySelector("#prompt-textarea");
-
-  // Check if the textarea exists and if we haven't already patched it.
-  if (textarea && !textarea.dataset.enterBlocked) {
-    // Add the event listener in the "capture" phase (the `true` argument).
-    // This ensures our listener runs before the default page listeners.
-    textarea.addEventListener("keydown", blockEnter, true);
-
-    // Mark the textarea as patched to avoid adding the listener multiple times.
-    textarea.dataset.enterBlocked = "true";
+  /**
+   * Finds the ChatGPT textarea and attaches the Enter key listener if not already attached.
+   */
+  function patchTextarea() {
+    const textarea = document.querySelector("#prompt-textarea");
+    
+    // Only proceed if the textarea exists and has not been patched yet
+    if (textarea && !textarea.dataset.enterPatchApplied) {
+      textarea.addEventListener("keydown", handleEnterKey, true); // Use capture phase
+      textarea.dataset.enterPatchApplied = "true";
+    }
   }
-}
 
-// ChatGPT is a single-page application (SPA), which means it dynamically
-// adds and removes elements from the page. A MutationObserver is the
-// best way to detect when the textarea is added to the DOM.
-const observer = new MutationObserver((mutations) => {
-  // We can optimize by checking if new nodes were added, but simply
-  // running patchTextarea() is effective and simple.
+  // Set up an observer to re-apply the patch if the textarea is recreated dynamically
+  const observer = new MutationObserver((mutations) => {
+    // Check if any added nodes contain the textarea or if the textarea itself was added
+    for (const mutation of mutations) {
+      if (mutation.addedNodes.length > 0) {
+        // A simple re-run is efficient due to the check inside patchTextarea
+        patchTextarea();
+        // If we find it, we can stop checking other mutations in this batch
+        if (document.querySelector("#prompt-textarea[data-enter-patch-applied='true']")) {
+            break;
+        }
+      }
+    }
+  });
+
+  // Start observing the document for changes
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+
+  // Run once on initial script load
   patchTextarea();
-});
 
-// Start observing the entire document for changes to the element tree.
-observer.observe(document.body, {
-  childList: true,
-  subtree: true
-});
+})();
 
-// Run the patch function once on script load, in case the
-// textarea is already present when the script is injected.
-patchTextarea();
+// --- END OF FILE content.js ---
