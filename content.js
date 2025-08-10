@@ -31,6 +31,7 @@
           range.deleteContents();
           range.insertNode(document.createTextNode("\n"));
           range.collapse(false);
+          event.target.dispatchEvent(new Event("input", { bubbles: true }));
         }
       }
     }
