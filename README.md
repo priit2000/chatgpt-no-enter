@@ -1,6 +1,6 @@
 # chatgpt-no-enter
 
-A Chrome extension that prevents accidental message sending in ChatGPT, Gemini, and Claude by disabling Enter as a send trigger.
+A Chrome extension that prevents accidental message sending in ChatGPT, Gemini, Claude, and Copilot by disabling Enter as a send trigger.
 
 ## Features
 
@@ -11,6 +11,7 @@ A Chrome extension that prevents accidental message sending in ChatGPT, Gemini, 
   - chatgpt.com
   - gemini.google.com
   - claude.ai
+  - copilot.microsoft.com
 
 ## Installation
 
@@ -35,6 +36,7 @@ Tested on:
 - ChatGPT (chat.openai.com, chatgpt.com)
 - Google Gemini (gemini.google.com)
 - Claude (claude.ai)
+- Microsoft Copilot (copilot.microsoft.com)
 
 ## License
 

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Disable Enter in ChatGPT",
-  "version": "1.7",
-  "description": "Prevents accidental message sends in ChatGPT, Gemini, and Claude by disabling the Enter key. Shift+Enter for new lines, Ctrl+Enter to send.",
+  "version": "1.10",
+  "description": "Prevents accidental sends in ChatGPT, Gemini, Claude, Copilot. Enter = newline, Ctrl+Enter = send.",
   "author": "Priit Kallas, Amperly AI",
   "icons": {
     "16": "icon16.png",
@@ -15,10 +15,11 @@
         "https://chat.openai.com/*",
         "https://chatgpt.com/*",
         "https://gemini.google.com/*",
-        "https://claude.ai/*"
+        "https://claude.ai/*",
+        "https://copilot.microsoft.com/*"
       ],
       "js": ["content.js"],
-      "run_at": "document_idle"
+      "run_at": "document_start"
     }
   ]
 }
