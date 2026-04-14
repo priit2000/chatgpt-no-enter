@@ -1,0 +1,38 @@
+Name:
+Disable Enter in ChatGPT
+
+Summary (132 chars max):
+Prevents accidental sends in ChatGPT, Gemini, Claude, Copilot, and Grok. Enter = newline, Ctrl+Enter = send.
+
+Category:
+Productivity
+
+Language:
+English
+
+Description:
+Tired of accidentally sending half-finished prompts?
+
+This extension swaps the Enter key behavior in AI chat apps so you can compose multi-line messages without fear of premature sends.
+
+How it works:
+- Enter inserts a new line (no more accidental sends)
+- Ctrl+Enter (Windows/Linux) or Cmd+Enter (macOS) sends your message
+- Shift+Enter still works as a newline too
+
+Supported platforms:
+- ChatGPT (chatgpt.com, chat.openai.com)
+- Google Gemini (gemini.google.com)
+- Anthropic Claude (claude.ai)
+- Microsoft Copilot (copilot.microsoft.com)
+- xAI Grok (grok.com)
+
+Lightweight, no permissions beyond the supported sites, no data collection. Just a simple quality-of-life fix for anyone who writes long prompts.
+
+Works on Chrome, Brave, Edge, and other Chromium-based browsers.
+
+Privacy:
+This extension does not collect, store, or transmit any user data. It only runs on the listed AI chat sites and modifies keyboard behavior locally in the browser.
+
+Single purpose:
+Changes Enter key from "send message" to "new line" in AI chat applications, requiring Ctrl+Enter or Cmd+Enter to send instead.

@@ -1,7 +1,7 @@
 // --- START OF FILE content.js ---
 
 (() => {
-  console.log("[NoEnter] Extension loaded v1.10");
+  console.log("[NoEnter] Extension loaded v1.11");
 
   function patchChatGPT() {
     if (!window.location.hostname.includes("chatgpt.com") && !window.location.hostname.includes("chat.openai.com")) return;
@@ -204,10 +204,76 @@
     console.log("[NoEnter] Copilot patched (window+document level)");
   }
 
+  function patchGrok() {
+    if (!window.location.hostname.includes("grok.com")) return;
+    if (window.__noEnterGrokPatched) return;
+    window.__noEnterGrokPatched = true;
+
+    const isGrokEditor = (target) =>
+      target.classList?.contains("ProseMirror") || target.closest(".ProseMirror") ||
+      target.closest(".query-bar") || target.closest(".tiptap");
+
+    const handler = (event) => {
+      if (event.key !== "Enter") return;
+      if (!isGrokEditor(event.target)) return;
+
+      const isMac = navigator.platform.toUpperCase().includes("MAC");
+      const ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey;
+
+      if (ctrlOrCmd) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        const sendBtn = document.querySelector('button[aria-label="Submit"]') ||
+                        document.querySelector('button[type="submit"]');
+        if (sendBtn) sendBtn.click();
+        return false;
+      }
+
+      if (!event.shiftKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        return false;
+      }
+    };
+
+    const insertNewline = (event) => {
+      if (event.key !== "Enter") return;
+      if (!isGrokEditor(event.target)) return;
+
+      const isMac = navigator.platform.toUpperCase().includes("MAC");
+      const ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey;
+
+      if (!ctrlOrCmd && !event.shiftKey) {
+        const editor = event.target.closest(".ProseMirror") || event.target;
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          range.deleteContents();
+          const br = document.createElement("br");
+          range.insertNode(br);
+          range.setStartAfter(br);
+          range.setEndAfter(br);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          editor.dispatchEvent(new InputEvent("input", { bubbles: true }));
+          console.log("[NoEnter] Grok: newline inserted via keyup");
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handler, { capture: true, passive: false });
+    window.addEventListener("keydown", handler, { capture: true, passive: false });
+    document.addEventListener("keyup", insertNewline, { capture: true, passive: false });
+    console.log("[NoEnter] Grok patched (window+document level)");
+  }
+
   patchChatGPT();
   patchGemini();
   patchClaude();
   patchCopilot();
+  patchGrok();
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
@@ -215,6 +281,7 @@
       patchGemini();
       patchClaude();
       patchCopilot();
+      patchGrok();
     });
   }
 })();
