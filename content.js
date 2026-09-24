@@ -1,7 +1,7 @@
 // --- START OF FILE content.js ---
 
 (() => {
-  console.log("[NoEnter] Extension loaded v1.11");
+  console.log("[NoEnter] Extension loaded v1.12");
 
   function patchChatGPT() {
     if (!window.location.hostname.includes("chatgpt.com") && !window.location.hostname.includes("chat.openai.com")) return;
@@ -9,12 +9,14 @@
     window.__noEnterChatGPTPatched = true;
 
     const handler = (event) => {
-      if (event.key !== "Enter") return;
-      
+      if (event.key !== "Enter" || event.isComposing) return;
+
       const target = event.target;
-      const isProseMirror = target.classList?.contains("ProseMirror") || target.closest(".ProseMirror");
-      const isPromptTextarea = target.id === "prompt-textarea" || target.closest("#prompt-textarea");
-      if (!isProseMirror && !isPromptTextarea) return;
+      const proseMirror = target.closest?.(".ProseMirror") || target.closest?.("#prompt-textarea");
+      const textarea = target.tagName === "TEXTAREA" &&
+                       (target.id === "mobile-composer-prompt" || target.id === "prompt-textarea" || target.name === "prompt")
+                       ? target : null;
+      if (!proseMirror && !textarea) return;
 
       const isMac = navigator.platform.toUpperCase().includes("MAC");
       const ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey;
@@ -23,59 +25,39 @@
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
-        
-        const editor = target.closest(".ProseMirror") || target;
-        const html = editor.innerHTML;
-        const fixedHtml = html.replace(/<br\s*\/?>/gi, '</p><p><br class="ProseMirror-trailingBreak">');
-        editor.innerHTML = fixedHtml;
-        editor.dispatchEvent(new InputEvent("input", { bubbles: true }));
-        
-        setTimeout(() => {
-          const sendButton = document.querySelector('[data-testid="send-button"]') || document.querySelector("button.send-button");
-          if (sendButton) sendButton.click();
-        }, 10);
+        // Send as-is, without touching the editor content
+        const sendButton = document.querySelector("#composer-submit-button") ||
+                           document.querySelector('[data-testid="send-button"]') ||
+                           document.querySelector('button[aria-label="Send message"]');
+        if (sendButton) sendButton.click();
         return false;
       }
 
-      if (!event.shiftKey) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
+      if (event.shiftKey) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      if (textarea) {
+        document.execCommand("insertText", false, "\n");
+        console.log("[NoEnter] ChatGPT: newline inserted (textarea)");
         return false;
       }
-    };
 
-    const insertNewline = (event) => {
-      if (event.key !== "Enter") return;
-      const target = event.target;
-      const isProseMirror = target.classList?.contains("ProseMirror") || target.closest(".ProseMirror");
-      const isPromptTextarea = target.id === "prompt-textarea" || target.closest("#prompt-textarea");
-      if (!isProseMirror && !isPromptTextarea) return;
-      
-      const isMac = navigator.platform.toUpperCase().includes("MAC");
-      const ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey;
-      
-      if (!ctrlOrCmd && !event.shiftKey) {
-        const editor = target.closest(".ProseMirror") || target;
-        const sel = window.getSelection();
-        if (sel.rangeCount > 0) {
-          const range = sel.getRangeAt(0);
-          range.deleteContents();
-          const br = document.createElement("br");
-          range.insertNode(br);
-          range.setStartAfter(br);
-          range.setEndAfter(br);
-          sel.removeAllRanges();
-          sel.addRange(range);
-          editor.dispatchEvent(new InputEvent("input", { bubbles: true }));
-          console.log("[NoEnter] ChatGPT: newline inserted via keyup");
-        }
-      }
+      // Let the editor handle it as Shift+Enter, so it creates the newline itself
+      const before = proseMirror.innerHTML;
+      target.dispatchEvent(new KeyboardEvent("keydown", {
+        key: "Enter", code: "Enter", keyCode: 13, which: 13,
+        shiftKey: true, bubbles: true, cancelable: true
+      }));
+      if (proseMirror.innerHTML === before) document.execCommand("insertParagraph", false);
+      console.log("[NoEnter] ChatGPT: newline inserted");
+      return false;
     };
 
     document.addEventListener("keydown", handler, { capture: true, passive: false });
-    document.addEventListener("keyup", insertNewline, { capture: true, passive: false });
-    console.log("[NoEnter] ChatGPT patched (window+document level)");
+    console.log("[NoEnter] ChatGPT patched (document level)");
   }
 
   function patchGemini() {
